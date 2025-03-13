@@ -2,9 +2,13 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: teal; icon-glyph: magic;
 
-// Füge deine Basic Authorization Anmeldedaten hier ein
-const userID = "userid";
-const apiPassword = "apikey";
+function loadFile (path) {
+  try { var fm = FileManager.iCloud() } catch (e) { var fm = FileManager.local() }
+  let code = fm.readString(fm.joinPath(fm.documentsDirectory(), path))
+  if (code == null) throw new Error(`Module '${path}' not found.`)
+  return Function(`${code}; return exports`)()
+}
+const credentials = loadFile('Intervals.js')
 
 let param = parseInt(args.widgetParameter);
 param = (isNaN(param) ? 1 : param);
@@ -12,9 +16,12 @@ param = (isNaN(param) ? 1 : param);
 // Define the type of histogram (Power or HR)
 let histogramUrl = "power-histogram";
 let title = "Power Histogram";
-if (param != 1) {
-  histogramUrl = "hr-histogram";
+let minBucket = 50;   // show only buckets with power > 50
+if(param != 1)
+{
+ 	histogramUrl = "hr-histogram" 
   title = "HR Histogram";
+  minBucket = 90;   // show only buckets with hr>90
 }
 
 // Calculate the date one week ago
@@ -23,10 +30,10 @@ date.setDate(date.getDate() - 7);
 let oldestDate = date.toISOString().split('T')[0];
 
 // API URLs for fetching activities and histograms
-const apiUrl = `https://intervals.icu/api/v1/athlete/${userID}/activities?oldest=${oldestDate}`;
+const apiUrl = `https://intervals.icu/api/v1/athlete/${credentials.userID}/activities?oldest=${oldestDate}`;
 const apiActivityUrl = `https://intervals.icu/api/v1/activity/`;
 
-const authHeader = "Basic " + btoa("API_KEY" + ":" + apiPassword);
+const authHeader = "Basic " + btoa("API_KEY" + ":" + credentials.apiPassword);
 
 // Function to fetch the last activity
 async function getLastActivity() {
@@ -76,9 +83,8 @@ async function createWidget() {
     zones = activity.icu_hr_zones;
   }
   
-  console.log(histogram);
-  console.log(zones);
   
+  histogram = histogram.filter(i => i.min >= minBucket);
   let zone_times = histogram.map(i => (i.secs / 60).toFixed(1));   
 
   let widget = new ListWidget(); 
@@ -117,7 +123,7 @@ async function createWidget() {
     barStack.addSpacer(2);
 
     let valueLabel = barStack.addText(`${histogram[index].min.toString()}`);
-    valueLabel.font = Font.systemFont(10);
+    valueLabel.font = Font.systemFont(8);
     valueLabel.leftAlignText();
   });
 

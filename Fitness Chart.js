@@ -1,8 +1,13 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: green; icon-glyph: magic;
-const athleteID = "userid";
-const API_KEY = "apikey";
+function loadFile (path) {
+  try { var fm = FileManager.iCloud() } catch (e) { var fm = FileManager.local() }
+  let code = fm.readString(fm.joinPath(fm.documentsDirectory(), path))
+  if (code == null) throw new Error(`Module '${path}' not found.`)
+  return Function(`${code}; return exports`)()
+}
+const credentials = loadFile('Intervals.js');
 
 const today = new Date();
 const year = today.getFullYear();
@@ -19,9 +24,9 @@ const formattedPastDate = `${pastYear}-${pastMonth}-${pastDay}`;
 
 // Function to fetch wellness data from the API
 const getData = async () => {
-  const url = `https://intervals.icu/api/v1/athlete/${athleteID}/wellness?oldest=${formattedPastDate}&newest=${formattedToday}`;
+  const url = `https://intervals.icu/api/v1/athlete/${credentials.userID}/wellness?oldest=${formattedPastDate}&newest=${formattedToday}`;
   const req = await new Request(url);
-  const auth = btoa(`API_KEY:${API_KEY}`);
+  const auth = btoa(`API_KEY:${credentials.apiPassword}`);
   req.headers = {
     Authorization: `Basic ${auth}`,
   };
@@ -71,33 +76,33 @@ const getChart = async () => {
   const charts = {
     type: "line",
     data: {
-      labels: labels, // Labels for the X-axis
+      labels: labels,   // Labels for the X-axis
       datasets: [
         {
-          label: "Fitness", // Fitness (CTL) dataset
+          label: "Fitness",   // Fitness (CTL) dataset
           data: ctls,
           fill: false,
-          borderColor: "#34ace4", // Light Blue
+          borderColor: "#34ace4",   // Light Blue
           lineTension: 0.2,
           yAxisID: 'y1',
           pointRadius: 0,
           borderWidth: 2,
         },
         {
-          label: "Fatigue", // Fatigue (ATL) dataset
+          label: "Fatigue",    // Fatigue (ATL) dataset
           data: atls,
           fill: false,
-          borderColor: "#6633cc", // Purple
+          borderColor: "#6633cc",   // Purple
           lineTension: 0.2,
           yAxisID: 'y1',
           pointRadius: 0,
           borderWidth: 1,
         },
         {
-          label: "Form", // Form dataset
+          label: "Form",    // Form dataset
           data: forms,
           fill: false,
-          borderColor: getFormColor(today.ctl - today.atl), // Dynamic color based on form value
+          borderColor: getFormColor(today.ctl-today.atl),   // Dynamic color based on form value
           lineTension: 0.2,
           yAxisID: 'y2',
           pointRadius: 0,
@@ -108,18 +113,19 @@ const getChart = async () => {
     options: {
       legend: {
         labels: {
-          fontSize: 10, // Font size for the legend
-        },
+          fontSize: 10,   // Font size for the legend
+        }
       },
       scales: {
         yAxes: [
           {
-            id: 'y1', // Primary Y-axis (Fitness and Fatigue)
+            id: 'y1',    // Primary Y-axis (Fitness and Fatigue)
             display: 'true',
             position: 'left',
+
           },
           {
-            id: 'y2', // Secondary Y-axis (Form)
+            id: 'y2',    // Secondary Y-axis (Form)
             display: 'true',
             position: 'right',
             gridLines: {

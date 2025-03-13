@@ -2,10 +2,13 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: yellow; icon-glyph: bicycle;
 // Importiere die Bibliotheken
-
-// Füge deine Basic Authorization Anmeldedaten hier ein
-const userID = "userid";        // TODO
-const apiPassword = "apikey";   // TODO 
+function loadFile (path) {
+  try { var fm = FileManager.iCloud() } catch (e) { var fm = FileManager.local() }
+  let code = fm.readString(fm.joinPath(fm.documentsDirectory(), path))
+  if (code == null) throw new Error(`Module '${path}' not found.`)
+  return Function(`${code}; return exports`)()
+}
+const credentials = loadFile('Intervals.js');
 
 let param = parseInt(args.widgetParameter);
 param = (isNaN(param) ? 0 : param);
@@ -16,9 +19,9 @@ let startOfThisYear = new Date(now.getFullYear() - param, 0, 1).toISOString().sp
 let endDate = new Date(now.getFullYear() - param, now.getMonth(), now.getDate() + 1).toISOString().split('T')[0];
 
 // API URL with dynamic oldest parameter for the beginning of this year
-const apiUrl = `https://intervals.icu/api/v1/athlete/${userID}/activities?oldest=${startOfThisYear}&newest=${endDate}`;
+const apiUrl = `https://intervals.icu/api/v1/athlete/${credentials.userID}/activities?oldest=${startOfThisYear}&newest=${endDate}`;
 
-const authHeader = "Basic " + btoa("API_KEY" + ":" + apiPassword);
+const authHeader = "Basic " + btoa("API_KEY" + ":" + credentials.apiPassword);
 
 // Function to fetch all activities for the current year
 async function getActivitiesFromThisYear() {
@@ -35,6 +38,41 @@ async function createWidget() {
   let activities = allActivities.filter(activity =>
     ["Ride", "VirtualRide", "GravelRide"].includes(activity.type));
   let activity = activities[0];
+
+  // Calculate the maximum streak
+  const sortedDays = Array.from(
+    new Set(activities.map(activity => activity.start_date_local.split("T")[0]))
+  ).sort();
+  let maxStreak = 0;
+  let currentStreak = 1;
+
+  for (let i = 1; i < sortedDays.length; i++) {
+    const prevDate = new Date(sortedDays[i - 1]);
+    const currentDate = new Date(sortedDays[i]);
+
+    // Check if the days are consecutive
+    if ((currentDate - prevDate) / (1000 * 60 * 60 * 24) === 1) {
+      currentStreak++;
+      maxStreak = Math.max(maxStreak, currentStreak);
+    } else {
+      currentStreak = 1; // Reset streak
+    }
+  }
+
+  maxStreak = Math.max(maxStreak, currentStreak); // Finalize max streak
+
+  // Heutige Aktivitäten überprüfen und Current Streak anzeigen
+  const today = new Date().toISOString().split("T")[0];
+  const hasActivityToday = activities.some(activity => activity.start_date_local.split("T")[0] === today);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
+  const currentStreakDisplay = hasActivityToday ? currentStreak : (activities.some(activity => activity.start_date_local.split("T")[0] === yesterdayStr) ? currentStreak : currentStreak - 1);
+
+
+  const uniqueDays = new Set(
+    activities.map(activity => activity.start_date_local.split("T")[0])
+  );
 
   let widget = new ListWidget();
 
@@ -71,38 +109,21 @@ async function createWidget() {
     // Second column
     let col2 = dataStack.addStack();
     col2.layoutVertically();
-    col2.addSpacer(24);
-    const uniqueDays = new Set(
-      activities.map(activity => activity.start_date_local.split("T")[0])
-    );
 
-    // Count the number of unique active days
-    const dayCount = uniqueDays.size;
-    col2.addText(`Active Days ${dayCount}`).font = Font.systemFont(12);
+
+    if(param===0) // this year
+    {
+      col2.addSpacer(4);
+      col2.addText(`Current Streak ${currentStreakDisplay}`).font = Font.systemFont(12); // current streak
+      col2.addSpacer(5);
+    }
+    else  // all previous years (show no current streak)
+      col2.addSpacer(25);
+
+    col2.addText(`Max Streak ${maxStreak}`).font = Font.systemFont(12); // Maximum streak
     col2.addSpacer(5);
 
-    // Calculate the maximum streak
-    const sortedDays = Array.from(
-      new Set(activities.map(activity => activity.start_date_local.split("T")[0]))
-    ).sort();
-    let maxStreak = 0;
-    let currentStreak = 1;
-
-    for (let i = 1; i < sortedDays.length; i++) {
-      const prevDate = new Date(sortedDays[i - 1]);
-      const currentDate = new Date(sortedDays[i]);
-
-      // Check if the days are consecutive
-      if ((currentDate - prevDate) / (1000 * 60 * 60 * 24) === 1) {
-        currentStreak++;
-        maxStreak = Math.max(maxStreak, currentStreak);
-      } else {
-        currentStreak = 1; // Reset streak
-      }
-    }
-
-    maxStreak = Math.max(maxStreak, currentStreak); // Finalize max streak
-    col2.addText(`Max Streak ${maxStreak}`).font = Font.systemFont(12); // Maximum streak
+    col2.addText(`Active Days ${uniqueDays.size}`).font = Font.systemFont(12); // Active days
     col2.addSpacer(5);
 
     const centuries = activities.filter(activity => activity.distance >= 100000);

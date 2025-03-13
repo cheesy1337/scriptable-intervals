@@ -1,8 +1,13 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: green; icon-glyph: magic;
-const athleteID = "userid";
-const API_KEY = "apikey";
+function loadFile (path) {
+  try { var fm = FileManager.iCloud() } catch (e) { var fm = FileManager.local() }
+  let code = fm.readString(fm.joinPath(fm.documentsDirectory(), path))
+  if (code == null) throw new Error(`Module '${path}' not found.`)
+  return Function(`${code}; return exports`)()
+}
+const credentials = loadFile('Intervals.js');
 
 const today = new Date();
 const year = today.getFullYear();
@@ -19,9 +24,9 @@ const formattedPastDate = `${pastYear}-${pastMonth}-${pastDay}`;
 
 // Function to fetch power curve data from the API
 const getPowerCurveData = async () => {
-  const url = `https://intervals.icu/api/v1/athlete/${athleteID}/activity-power-curves{ext}?oldest=${formattedPastDate}&newest=${formattedToday}`;
+  const url = `https://intervals.icu/api/v1/athlete/${credentials.userID}/activity-power-curves{ext}?oldest=${formattedPastDate}&newest=${formattedToday}`;
   const req = await new Request(url);
-  const auth = btoa(`API_KEY:${API_KEY}`);
+  const auth = btoa(`API_KEY:${credentials.apiPassword}`);
   req.headers = {
     Authorization: `Basic ${auth}`,
   };

@@ -2,10 +2,13 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: yellow; icon-glyph: bicycle;
 // Importiere die Bibliotheken
-
-// Füge deine Basic Authorization Anmeldedaten hier ein
-const userID = "userid";        // TODO
-const apiPassword = "apikey";   // TODO
+function loadFile (path) {
+  try { var fm = FileManager.iCloud() } catch (e) { var fm = FileManager.local() }
+  let code = fm.readString(fm.joinPath(fm.documentsDirectory(), path))
+  if (code == null) throw new Error(`Module '${path}' not found.`)
+  return Function(`${code}; return exports`)()
+}
+const credentials = loadFile('Intervals.js');
 
 let param = parseInt(args.widgetParameter);
 param = (isNaN(param) ? 1 : param);
@@ -18,10 +21,10 @@ let startOfHalfYear = new Date(now.getFullYear() - param, 6, 1).toISOString().sp
 let endOfLastYear = new Date(now.getFullYear() - param, 11, 31).toISOString().split('T')[0];
 
 // API URL with dynamic "oldest" and "newest" parameters
-const apiUrl = `https://intervals.icu/api/v1/athlete/${userID}/activities?oldest=${startOfLastYear}&newest=${endOfHalfYear}`;
-const apiUrl2 = `https://intervals.icu/api/v1/athlete/${userID}/activities?oldest=${startOfHalfYear}&newest=${endOfLastYear}`;
+const apiUrl = `https://intervals.icu/api/v1/athlete/${credentials.userID}/activities?oldest=${startOfLastYear}&newest=${endOfHalfYear}`;
+const apiUrl2 = `https://intervals.icu/api/v1/athlete/${credentials.userID}/activities?oldest=${startOfHalfYear}&newest=${endOfLastYear}`;
 
-const authHeader = "Basic " + btoa("API_KEY" + ":" + apiPassword);
+const authHeader = "Basic " + btoa("API_KEY" + ":" + credentials.apiPassword);
 
 // Function to fetch all activities from the first half of the previous year
 async function getActivitiesFromLastYear() {
@@ -73,8 +76,33 @@ async function createWidget() {
 
   activities = activities.concat(activities2);
 
-  let widget = new ListWidget();
+  // count active days (uniqueDays.size)
+  const uniqueDays = new Set(
+    activities.map(activity => activity.start_date_local.split("T")[0])
+   );
 
+  // Calculate Max. and Current Streak
+		const sortedDays = Array.from(
+      new Set(activities.map(activity => activity.start_date_local.split("T")[0]))
+    ).sort();
+    let maxStreak = 0;
+    let currentStreak = 1;
+    
+    for (let i = 1; i < sortedDays.length; i++) {
+      const prevDate = new Date(sortedDays[i - 1]);
+      const currentDate = new Date(sortedDays[i]);
+
+      // Überprüfen, ob die Tage aufeinanderfolgend sind
+      if ((currentDate - prevDate) / (1000 * 60 * 60 * 24) === 1) {
+        currentStreak++;
+        maxStreak = Math.max(maxStreak, currentStreak);
+      } else {
+        currentStreak = 1; // Streak zurücksetzen
+      }
+    }
+    maxStreak = Math.max(maxStreak, currentStreak);// Finalize max streak
+
+  let widget = new ListWidget();
   {
     // Title of the widget
     let name = widget.addText(`Total ${now.getFullYear() - param}`);
@@ -110,36 +138,11 @@ async function createWidget() {
     col2.layoutVertically();
     col2.addSpacer(24);
 
-    const uniqueDays = new Set(
-      activities.map(activity => activity.start_date_local.split("T")[0])
-    );
-
     // Count the number of unique active days
-    const dayCount = uniqueDays.size;
-    col2.addText(`Active Days ${dayCount}`).font = Font.systemFont(12); // Active days
+
+		col2.addText(`Active Days ${uniqueDays.size}`).font = Font.systemFont(12); // Active days
     col2.addSpacer(5);
 
-    // Calculate the maximum streak
-    const sortedDays = Array.from(
-      new Set(activities.map(activity => activity.start_date_local.split("T")[0]))
-    ).sort();
-    let maxStreak = 0;
-    let currentStreak = 1;
-
-    for (let i = 1; i < sortedDays.length; i++) {
-      const prevDate = new Date(sortedDays[i - 1]);
-      const currentDate = new Date(sortedDays[i]);
-
-      // Check if the days are consecutive
-      if ((currentDate - prevDate) / (1000 * 60 * 60 * 24) === 1) {
-        currentStreak++;
-        maxStreak = Math.max(maxStreak, currentStreak);
-      } else {
-        currentStreak = 1; // Reset streak
-      }
-    }
-
-    maxStreak = Math.max(maxStreak, currentStreak); // Finalize max streak
     col2.addText(`Max Streak ${maxStreak}`).font = Font.systemFont(12); // Maximum streak
     col2.addSpacer(5);
 
@@ -160,7 +163,7 @@ async function createWidget() {
     col3.addText("Max").font = Font.systemFont(14);
     col3.addSpacer(7);
     const maxDistance = activities.reduce((max, activity) => Math.max(max, activity.distance), 0);
-    col3.addText(`↔️ ${Math.round(maxDistance / 1000)} km`).font = Font.systemFont(12); // Max distance
+    col3.addText(`↔️ ${Math.round(maxDistance/1000)} km`).font = Font.systemFont(12); // Max distance
     col3.addSpacer(5);
     const maxElevation = activities.reduce((max, activity) => Math.max(max, activity.total_elevation_gain), 0);
     col3.addText(`⛰️ ${Math.round(maxElevation)} m`).font = Font.systemFont(12); // Max elevation gain
