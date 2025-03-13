@@ -76,10 +76,16 @@ function getColor(maxValue, zones) {
 async function createWidget() {
   let activity = await getLastActivity();
   let histogram = await getHistogram(activity.id);
-  let zones = activity.icu_power_zones.map(i => Math.round(i * activity.icu_ftp / 100));
-  
-  // Use HR zones if the parameter is not 1
-  if (param != 1) {
+  let zones = [];
+
+  // Use HR zones if the parameter is not 1, otherwise power
+  if (param === 1) 
+  {
+    if(activity.icu_power_zones != null)
+      zones = activity.icu_power_zones.map(i => Math.round(i * activity.icu_ftp / 100));
+  }
+  else 
+  {
     zones = activity.icu_hr_zones;
   }
   

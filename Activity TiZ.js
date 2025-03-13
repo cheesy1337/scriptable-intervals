@@ -53,12 +53,17 @@ let barColors = [new Color("#40E0D0"), new Color("#32CD32"), new Color("#FFD700"
 
 async function createWidget() {
   let activity = await getLastActivity();
-  console.log(activity.icu_zone_times);
-  let zone_times = activity.icu_zone_times.map(i => (i.secs).toFixed(0));
+  let zone_times = [];
   
-  // use HR if param is used and not 1
-  if (param != 1) 
-  {  	
+  // Use HR zones if the parameter is not 1, otherwise power
+  if (param === 1) 
+  {
+    if(activity.icu_zone_times != null)
+      zone_times = activity.icu_zone_times.map(i => (i.secs).toFixed(0));
+  }
+  else 
+  {
+    if(activity.icu_hr_zone_times != null)
     zone_times = activity.icu_hr_zone_times.map(i => (i).toFixed(0)); 
   }
 
