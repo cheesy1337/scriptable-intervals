@@ -11,6 +11,10 @@ This Widget shows a bunch of data (in sum 18 fields) of the last activity.
 
 ![IMG_1604](https://github.com/user-attachments/assets/7352951e-e8f5-4534-a043-97497f111a18)
 
+Additionaly if you did the route during the last year more than once, it will check your position on this route. It will show a medal, if you are 1., 2. or 3. place on this route. 
+
+![IMG_1618](https://github.com/user-attachments/assets/1196e6ca-e486-42a5-939f-66b41a4a0eae)
+
 
 ## Activity Fields
 This is the same as Activity Fields Big, but it shows only 6 Fields in a Medium Widget. 
