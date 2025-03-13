@@ -9,13 +9,13 @@ The "Intervals.js" file should look something like this (Note: This are of cours
 ## Activity Fields Big
 This Widget shows a bunch of data (in sum 18 fields) of the last activity. 
 
-![IMG_1604](https://github.com/user-attachments/assets/32729226-782b-4107-a649-9743890e14c1)
+![IMG_1604](https://github.com/user-attachments/assets/7352951e-e8f5-4534-a043-97497f111a18)
 
 
 ## Activity Fields
 This is the same as Activity Fields Big, but it shows only 6 Fields in a Medium Widget. 
 
-![IMG_1605](https://github.com/user-attachments/assets/1cfc3836-5dee-44c2-905f-12586fe664ac)
+![Activity Fields](https://github.com/user-attachments/assets/93a951f4-11fa-402d-b466-eb7d7a096e9f)
 
 ### Parameters
 If you set the argument (Parameter) of the widget to "1" you get HR Data. If you use "0" you get Power Data. If you leave it blank, you got the times and speed and so on as shown in the screenshot. 
@@ -24,7 +24,7 @@ If you set the argument (Parameter) of the widget to "1" you get HR Data. If you
 ## Activity Histogram
 This shows the power or hr histogram of the last activity. 
 
-![IMG_1607](https://github.com/user-attachments/assets/d2ed8808-dd44-47ec-a326-6e59ad66baf3)
+![Activity Histogram](https://github.com/user-attachments/assets/7a7618a3-760b-4042-b98c-9e4d5ff99874)
 
 ### Parameters
 If you set the argument (Parameter) of the widget to "2" you get HR Data. If you use "1" or leave it blank you get Power Data. 
@@ -34,7 +34,7 @@ You can change the variable minBucket in the script to show only buckets bigger 
 ## Activity TiZ
 This shows the Power or HR Time in Zones of the last activity. 
 
-![IMG_1608](https://github.com/user-attachments/assets/f9e402cb-6f5e-41cb-a18e-67c293a9655f)
+![Activity TiZ](https://github.com/user-attachments/assets/093c3bb7-8e4a-496b-82c1-727fb2fd813e)
 
 ### Parameters
 If you set the argument (Parameter) of the widget to "2" you get HR Time in Zones. If you use "1" or leave it blank you get Power Time in Zones. 
