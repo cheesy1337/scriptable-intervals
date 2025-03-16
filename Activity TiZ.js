@@ -10,7 +10,7 @@ function loadFile (path) {
 const credentials = loadFile('Intervals.js')
 
 let param = parseInt(args.widgetParameter);
-param = (isNaN(param) ? 1 : param);
+param = (isNaN(param) ? 0 : param);
 
 // Determine if the focus is on Power Zones or Heart Rate Zones
 let title = "Power Zones";
@@ -64,7 +64,7 @@ async function createWidget() {
   else 
   {
     if(activity.icu_hr_zone_times != null)
-    zone_times = activity.icu_hr_zone_times.map(i => (i).toFixed(0)); 
+      zone_times = activity.icu_hr_zone_times.map(i => (i).toFixed(0)); 
   }
 
   let widget = new ListWidget();

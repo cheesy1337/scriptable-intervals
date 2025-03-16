@@ -46,19 +46,24 @@ function formatTime(seconds) {
 async function createWidget() {
   let activity = await getLastActivity();
   
-  let titles = new Array("⚡️ Average", "⚙️ Efficiency", "⚡️ Max", "💚 P/HR Z2", "⚡️ Weighted", "💪 Load");
-  let data = new Array(`${activity.icu_average_watts} W`, `${activity.icu_efficiency_factor.toFixed(2)}`, `${activity.icu_pm_p_max} W`, `${(activity.icu_power_hr_z2).toFixed(2)}`, `${activity.icu_weighted_avg_watts} W`, `${activity.icu_training_load} TSS`);
+  let titles = [];
+  let data = []; 
   
+  if(param === 0) {
+    titles = new Array("⚡️ Average", "⚙️ Efficiency", "⚡️ Max", "💚 P/HR Z2", "⚡️ Weighted", "💪 Load");
+    data = new Array(`${(activity.icu_average_watts ?? 0)} W`, `${(activity.icu_efficiency_factor ?? 0).toFixed(2)}`, `${(activity.icu_pm_p_max ?? 0)} W`, `${(activity.icu_power_hr_z2 ?? 0).toFixed(2)}`, `${(activity.icu_weighted_avg_watts ?? 0)} W`, `${(activity.icu_training_load ?? 0)} TSS`);
+  }
+
   if(param === 1) {
     titles = new Array("❤️ Average", "🎯 Cadence", "❤️‍🔥 Max", "🚀 IF", "❤️‍🩹 HRRc", "🔨 Work");
     let hrrc = "-";
     if(activity.icu_hrr != null) hrrc = activity.icu_hrr.hrr.toString();
-    data = new Array(`${activity.average_heartrate} bpm`, `${activity.average_cadence.toFixed(0)} rpm`, `${activity.max_heartrate} bpm`, `${(activity.icu_intensity).toFixed(0)} %`, `${hrrc}`, `${(activity.icu_joules / 1000).toFixed(0)} kJ`);
+    data = new Array(`${activity.average_heartrate} bpm`, `${(activity.average_cadence ?? 0).toFixed(0)} rpm`, `${activity.max_heartrate} bpm`, `${(activity.icu_intensity ?? 0).toFixed(0)} %`, `${hrrc}`, `${((activity.icu_joules ?? 0) / 1000).toFixed(0)} kJ`);
   }
   
   if(param === 2) {
     titles = new Array("⏳ Elapsed", "🗺️ Distance", "⏱️ Moving", "🏔️ Elevation", "🌬️ Coasting", "🚴 Speed");
-    data = new Array(`${formatTime(activity.elapsed_time)}`, `${(activity.distance / 1000).toFixed(2)} km`, `${formatTime(activity.moving_time)}`, `${(activity.total_elevation_gain ?? 0).toFixed(0)} m`, `${formatTime(activity.coasting_time)}`, `${(activity.distance / activity.moving_time * 3.6).toFixed(1)} km/h`);
+    data = new Array(`${formatTime(activity.elapsed_time)}`, `${(activity.distance / 1000).toFixed(2)} km`, `${formatTime(activity.moving_time)}`, `${(activity.total_elevation_gain ?? 0).toFixed(0)} m`, `${formatTime((activity.coasting_time ?? 0))}`, `${(activity.distance / activity.moving_time * 3.6).toFixed(1)} km/h`);
   }
   
   // Create widget

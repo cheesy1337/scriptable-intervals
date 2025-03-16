@@ -1,7 +1,18 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: yellow; icon-glyph: bicycle;
-// Importiere die Bibliotheken
+
+/******************************************************
+ * Configuration
+ *****************************************************/
+
+enableFilter = false;   // Enable this to "true" to filter only certain activity types
+filterActivities = new Array("Ride", "VirtualRide", "GravelRide");  // activity types
+
+/******************************************************
+ * 
+ *****************************************************/
+
 function loadFile (path) {
   try { var fm = FileManager.iCloud() } catch (e) { var fm = FileManager.local() }
   let code = fm.readString(fm.joinPath(fm.documentsDirectory(), path))
@@ -46,12 +57,13 @@ async function getActivitiesFromLastYear2() {
 
 // Function to create the widget
 async function createWidget() {
-  let allActivities = await getActivitiesFromLastYear();
-  let activities = allActivities
-    .filter(activity =>
-      ["Ride", "VirtualRide", "GravelRide"].includes(activity.type)
-    )
-    .map(activity => ({
+  let activities1 = await getActivitiesFromLastYear();
+  if(enableFilter)
+  {
+    activities1 = activities1.filter(activity =>
+      filterActivities.includes(activity.type));
+  }
+  activities1 = activities1.map(activity => ({
       distance: activity.distance,
       total_elevation_gain: activity.total_elevation_gain,
       start_date_local: activity.start_date_local,
@@ -60,12 +72,13 @@ async function createWidget() {
       total_work: activity.icu_joules 
     }));
 
-  allActivities = await getActivitiesFromLastYear2();
-  let activities2 = allActivities
-    .filter(activity =>
-      ["Ride", "VirtualRide", "GravelRide"].includes(activity.type)
-    )
-    .map(activity => ({
+  let activities2 = await getActivitiesFromLastYear2();
+  if(enableFilter)
+  {
+    activities2 = activities2.filter(activity =>
+      filterActivities.includes(activity.type));
+  }
+  activities2 = activities2.map(activity => ({
       distance: activity.distance,
       total_elevation_gain: activity.total_elevation_gain,
       start_date_local: activity.start_date_local,
@@ -74,7 +87,7 @@ async function createWidget() {
       total_work: activity.icu_joules
     }));
 
-  activities = activities.concat(activities2);
+  let activities = activities1.concat(activities2);
 
   // count active days (uniqueDays.size)
   const uniqueDays = new Set(

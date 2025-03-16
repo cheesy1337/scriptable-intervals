@@ -1,7 +1,17 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: yellow; icon-glyph: bicycle;
-// Importiere die Bibliotheken
+
+/******************************************************
+ * Configuration
+ *****************************************************/
+
+enableFilter = false;   // Enable this to "true" to filter only certain activity types
+filterActivities = new Array("Ride", "VirtualRide", "GravelRide");  // activity types
+
+/******************************************************
+ * 
+ *****************************************************/
 function loadFile (path) {
   try { var fm = FileManager.iCloud() } catch (e) { var fm = FileManager.local() }
   let code = fm.readString(fm.joinPath(fm.documentsDirectory(), path))
@@ -34,10 +44,12 @@ async function getActivitiesFromThisYear() {
 
 // Function to create the widget
 async function createWidget() {
-  let allActivities = await getActivitiesFromThisYear();
-  let activities = allActivities.filter(activity =>
-    ["Ride", "VirtualRide", "GravelRide"].includes(activity.type));
-  let activity = activities[0];
+  let activities = await getActivitiesFromThisYear();
+  if(enableFilter)
+  {
+    activities = activities.filter(activity =>
+      filterActivities.includes(activity.type));
+  }
 
   // Calculate the maximum streak
   const sortedDays = Array.from(
@@ -76,7 +88,7 @@ async function createWidget() {
 
   let widget = new ListWidget();
 
-  if (activity) {
+  if (activities) {
     // Activity year title
     let name = widget.addText(`To Date ${now.getFullYear() - param}`);
     name.font = Font.boldSystemFont(20);

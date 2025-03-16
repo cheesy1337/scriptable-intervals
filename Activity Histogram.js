@@ -11,7 +11,7 @@ function loadFile (path) {
 const credentials = loadFile('Intervals.js')
 
 let param = parseInt(args.widgetParameter);
-param = (isNaN(param) ? 1 : param);
+param = (isNaN(param) ? 0 : param);
 
 // Define the type of histogram (Power or HR)
 let histogramUrl = "power-histogram";
@@ -86,7 +86,7 @@ async function createWidget() {
   }
   else 
   {
-    zones = activity.icu_hr_zones;
+      zones = activity.icu_hr_zones;
   }
   
   
